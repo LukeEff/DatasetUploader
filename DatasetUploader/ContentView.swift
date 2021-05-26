@@ -26,8 +26,6 @@ struct ContentView: View {
     @State private var backImage = UIImage()
     @State private var isShowPhotoLibraryBack = false
     
-    public static var didUpload = true
-    
     var body: some View {
         
         VStack {
@@ -37,9 +35,9 @@ struct ContentView: View {
                 Divider()
                 
                 HStack {
-                Slider(value: $surfaceGrade, in: 0...10)
+                Slider(value: $surfaceGrade, in: 1...10)
                 Spacer()
-                Slider(value: $backSurfaceGrade, in: 0...10)
+                Slider(value: $backSurfaceGrade, in: 1...10)
                 }
                 
                 HStack {
@@ -51,9 +49,9 @@ struct ContentView: View {
                 Divider()
                 
                 HStack {
-                    Slider(value: $edgeGrade, in: 0...10)
+                    Slider(value: $edgeGrade, in: 1...10)
                     Spacer()
-                    Slider(value: $backEdgeGrade, in: 0...10)
+                    Slider(value: $backEdgeGrade, in: 1...10)
                 }
                 
                 HStack {
@@ -67,9 +65,9 @@ struct ContentView: View {
                 VStack{
                     
                     HStack {
-                        Slider(value: $cornerGrade, in: 0...10)
+                        Slider(value: $cornerGrade, in: 1...10)
                         Spacer()
-                        Slider(value: $backCornerGrade, in: 0...10)
+                        Slider(value: $backCornerGrade, in: 1...10)
                     }
                    
                     HStack {
@@ -81,9 +79,9 @@ struct ContentView: View {
                     Divider()
                     
                     HStack {
-                        Slider(value: $centeringGrade, in: 0...10)
+                        Slider(value: $centeringGrade, in: 1...10)
                         Spacer()
-                        Slider(value: $backCenteringGrade, in: 0...10)
+                        Slider(value: $backCenteringGrade, in: 1...10)
                     }
                     
                     HStack {
@@ -161,39 +159,20 @@ struct ContentView: View {
                 let edgeName = "\(Int(edgeGrade))_edge"
                 let cornerName = "\(Int(cornerGrade))_corner"
                 let centeringName = "\(Int(centeringGrade))_centering"
+                let frontName = surfaceName + "__" + edgeName + "__" + cornerName + "__" + centeringName
                 
                 let backSurfaceName = "\(Int(backSurfaceGrade))_surface"
                 let backEdgeName = "\(Int(backEdgeGrade))_edge"
                 let backCornerName = "\(Int(backCornerGrade))_corner"
                 let backCenteringName = "\(Int(backCenteringGrade))_centering"
                 
-                let surfacePath = "/var/www/data/surface/\(Int(surfaceGrade))"
-                let edgePath = "/var/www/data/edge/\(Int(edgeGrade))"
-                let cornerPath = "/var/www/data/corner/\(Int(cornerGrade))"
-                let centeringPath = "/var/www/data/centering/\(Int(centeringGrade))"
+                let backName = backSurfaceName + "__" + backEdgeName + "__" + backCornerName + "__" + backCenteringName
                 
-                let backSurfacePath = "/var/www/data/surface/\(Int(backSurfaceGrade))"
-                let backEdgePath = "/var/www/data/edge/\(Int(backEdgeGrade))"
-                let backCornerPath = "/var/www/data/corner/\(Int(backCornerGrade))"
-                let backCenteringPath = "/var/www/data/centering/\(Int(backCenteringGrade))"
-            
+                let imgPath = "/var/www/data/grade"
 
-                
-                myImageUploadRequest(imageToUpload: image, imgKey: surfaceName, path: surfacePath)
-                myImageUploadRequest(imageToUpload: image, imgKey: edgeName, path: edgePath)
-                myImageUploadRequest(imageToUpload: image, imgKey: cornerName, path: cornerPath)
-                myImageUploadRequest(imageToUpload: image, imgKey: centeringName, path: centeringPath)
-                
-                myImageUploadRequest(imageToUpload: backImage, imgKey: backSurfaceName + "_back", path: backSurfacePath)
-                myImageUploadRequest(imageToUpload: backImage, imgKey: backEdgeName + "_back", path: backEdgePath)
-                myImageUploadRequest(imageToUpload: backImage, imgKey: backCornerName + "_back", path: backCornerPath)
-                    myImageUploadRequest(imageToUpload: backImage, imgKey: backCenteringName + "_back", path: backCenteringPath)
-                
-                if (ContentView.didUpload == true){
-                    NotificationBanner.show("Successfully uploaded photo", 1.0, UIColor.blue)
-                } else {
-                    NotificationBanner.show("An error occured for one or both of the photos. Do you have an internet connection? Contact Luke for more info.", 5.0, UIColor.red)
-                }
+                NotificationBanner.show("Uploading...", 5.0, UIColor.systemBlue)
+                myImageUploadRequest(imageToUpload: image, imgKey: frontName, path: imgPath)
+                myImageUploadRequest(imageToUpload: backImage, imgKey: backName, path: imgPath, shouldNotify: true)
                 
                 image = UIImage()
                 backImage = UIImage()
@@ -205,8 +184,7 @@ struct ContentView: View {
                 backCornerGrade = 10
                 centeringGrade = 10
                 backCenteringGrade = 10
-                //Have a boolean return to let
-                // user know it worked
+                
             } label: {
                 Text("Submit")
                     .frame(minWidth: 100, maxWidth: .infinity, minHeight: 44, maxHeight: 44, alignment: .center) 
@@ -219,62 +197,61 @@ struct ContentView: View {
     }
     }
     
-    class NotificationBanner {
-      static let labelLeftMarging = CGFloat(16)
-      static let labelTopMargin = CGFloat(24)
-      static let animateDuration = 1.0
-      static var bannerAppearanceDuration: TimeInterval = 2
-      
-        static func show(_ text: String, _ time: Double, _ color: UIColor) {
-        let superView = UIApplication.shared.keyWindow!.rootViewController!.view!
-        bannerAppearanceDuration = time
-        let height = CGFloat(64)
-        let width = superView.bounds.size.width
-
-        let bannerView = UIView(frame: CGRect(x: 0, y: 0-height, width: width, height: height))
-        bannerView.layer.opacity = 1
-        bannerView.backgroundColor = color
-        bannerView.translatesAutoresizingMaskIntoConstraints = false
-        
-        let label = UILabel(frame: CGRect.zero)
-        label.textColor = UIColor.white
-        label.numberOfLines = 0
-        label.text = text
-        label.translatesAutoresizingMaskIntoConstraints = false
-        
-        bannerView.addSubview(label)
-        superView.addSubview(bannerView)
-        
-        let labelCenterYContstraint = NSLayoutConstraint(item: label, attribute: .centerY, relatedBy: .equal, toItem: bannerView, attribute: .centerY, multiplier: 1, constant: 10)
-        let labelCenterXConstraint = NSLayoutConstraint(item: label, attribute: .centerX, relatedBy: .equal, toItem: bannerView, attribute: .centerX, multiplier: 1, constant: 0)
-        let labelWidthConstraint = NSLayoutConstraint(item: label, attribute: .width, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: width - labelLeftMarging*2)
-        let labelTopConstraint = NSLayoutConstraint(item: label, attribute: .top, relatedBy: .equal, toItem: bannerView, attribute: .top, multiplier: 1, constant: labelTopMargin + 20)
-        
-        let bannerWidthConstraint = NSLayoutConstraint(item: bannerView, attribute: .width, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: width)
-        let bannerCenterXConstraint = NSLayoutConstraint(item: bannerView, attribute: .leading, relatedBy: .equal, toItem: superView, attribute: .leading, multiplier: 1, constant: 0)
-        let bannerTopConstraint = NSLayoutConstraint(item: bannerView, attribute: .top, relatedBy: .equal, toItem: superView, attribute: .top, multiplier: 1, constant: 0-height)
-        
-        NSLayoutConstraint.activate([labelCenterYContstraint, labelCenterXConstraint, labelWidthConstraint, labelTopConstraint, bannerWidthConstraint, bannerCenterXConstraint, bannerTopConstraint])
-        
-        UIView.animate(withDuration: animateDuration) {
-          bannerTopConstraint.constant = 0
-          superView.layoutIfNeeded()
-        }
-        
-        //remove subview after time 2 sec
-        UIView.animate(withDuration: animateDuration, delay: bannerAppearanceDuration, options: [], animations: {
-          bannerTopConstraint.constant = 0 - bannerView.frame.height
-          superView.layoutIfNeeded()
-        }, completion: { finished in
-          if finished {
-            bannerView.removeFromSuperview()
-          }
-        })
-      }
-    }
-    
 }
 
+class NotificationBanner {
+  static let labelLeftMarging = CGFloat(16)
+  static let labelTopMargin = CGFloat(24)
+  static let animateDuration = 1.0
+  static var bannerAppearanceDuration: TimeInterval = 2
+  
+    static func show(_ text: String, _ time: Double, _ color: UIColor) {
+    let superView = UIApplication.shared.keyWindow!.rootViewController!.view!
+    bannerAppearanceDuration = time
+    let height = CGFloat(64)
+    let width = superView.bounds.size.width
+
+    let bannerView = UIView(frame: CGRect(x: 0, y: 0-height, width: width, height: height))
+    bannerView.layer.opacity = 1
+    bannerView.backgroundColor = color
+    bannerView.translatesAutoresizingMaskIntoConstraints = false
+    
+    let label = UILabel(frame: CGRect.zero)
+    label.textColor = UIColor.white
+    label.numberOfLines = 0
+    label.text = text
+    label.translatesAutoresizingMaskIntoConstraints = false
+    
+    bannerView.addSubview(label)
+    superView.addSubview(bannerView)
+    
+    let labelCenterYContstraint = NSLayoutConstraint(item: label, attribute: .centerY, relatedBy: .equal, toItem: bannerView, attribute: .centerY, multiplier: 1, constant: 10)
+    let labelCenterXConstraint = NSLayoutConstraint(item: label, attribute: .centerX, relatedBy: .equal, toItem: bannerView, attribute: .centerX, multiplier: 1, constant: 0)
+    let labelWidthConstraint = NSLayoutConstraint(item: label, attribute: .width, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: width - labelLeftMarging*2)
+    let labelTopConstraint = NSLayoutConstraint(item: label, attribute: .top, relatedBy: .equal, toItem: bannerView, attribute: .top, multiplier: 1, constant: labelTopMargin + 20)
+    
+    let bannerWidthConstraint = NSLayoutConstraint(item: bannerView, attribute: .width, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: width)
+    let bannerCenterXConstraint = NSLayoutConstraint(item: bannerView, attribute: .leading, relatedBy: .equal, toItem: superView, attribute: .leading, multiplier: 1, constant: 0)
+    let bannerTopConstraint = NSLayoutConstraint(item: bannerView, attribute: .top, relatedBy: .equal, toItem: superView, attribute: .top, multiplier: 1, constant: 0-height)
+    
+    NSLayoutConstraint.activate([labelCenterYContstraint, labelCenterXConstraint, labelWidthConstraint, labelTopConstraint, bannerWidthConstraint, bannerCenterXConstraint, bannerTopConstraint])
+    
+    UIView.animate(withDuration: animateDuration) {
+      bannerTopConstraint.constant = 0
+      superView.layoutIfNeeded()
+    }
+    
+    //remove subview after time 2 sec
+    UIView.animate(withDuration: animateDuration, delay: bannerAppearanceDuration, options: [], animations: {
+      bannerTopConstraint.constant = 0 - bannerView.frame.height
+      superView.layoutIfNeeded()
+    }, completion: { finished in
+      if finished {
+        bannerView.removeFromSuperview()
+      }
+    })
+  }
+}
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
@@ -282,15 +259,13 @@ struct ContentView_Previews: PreviewProvider {
     }
 }
 
-func myImageUploadRequest(imageToUpload: UIImage, imgKey: String, path: String) {
+func myImageUploadRequest(imageToUpload: UIImage, imgKey: String, path: String, shouldNotify: Bool = false) {
 
     let myUrl = NSURL(string: "http://databox.ddns.net/dataphp.php");
     let request = NSMutableURLRequest(url:myUrl! as URL);
     request.httpMethod = "POST";
 
     let param = [
-        "firstName"  : "Luke",
-        "lastName"    : "Fernandez",
         "filePath"    : path
     ]
 
@@ -299,44 +274,48 @@ func myImageUploadRequest(imageToUpload: UIImage, imgKey: String, path: String) 
 
     let imageData = imageToUpload.jpegData(compressionQuality: 1)
     if imageData == nil  {
-        ContentView.didUpload = false
+        DispatchQueue.main.async {
+            if(shouldNotify) { NotificationBanner.show("An error occured for one or both of the photos. Do you have an internet connection? Contact Luke for more info.", 8.0, UIColor.red) }
+        }
         return
     }
+
+    request.timeoutInterval = 240
     request.httpBody = createBodyWithParameters(parameters: param, filePathKey: "file", imageDataKey: imageData! as NSData, boundary: boundary, imgKey: imgKey) as Data
     let task = URLSession.shared.dataTask(with: request as URLRequest) {
         data, response, error in
 
             if error != nil {
                 print("error=\(error!)")
-                ContentView.didUpload = false
+                DispatchQueue.main.async {
+                    if(shouldNotify) { NotificationBanner.show("An error occured for one or both of the photos. Do you have an internet connection? Contact Luke for more info.", 8.0, UIColor.red) }                }
                 return
             }
             
-            //print response
-            //print("response = \(response!)")
 
-            // print reponse body
             let responseString = NSString(data: data!, encoding: String.Encoding.utf8.rawValue)
-            
             print("response data = \(responseString!)")
         
         let resString: String = responseString! as String
-        print("resString: " + resString)
-        print(!resString.contains("Error"))
         if !resString.contains("Error") {
-            ContentView.didUpload = true
+            //Success banner msg can be added here async
+            
         } else {
-            ContentView.didUpload = false
+            DispatchQueue.main.async {
+                if(shouldNotify) { NotificationBanner.show("An error occured for one or both of the photos. Do you have an internet connection? Contact Luke for more info.", 8.0, UIColor.red) }            }
         }
         
         }
         task.resume()
+   
+       
+    
     }
 
 
 
 
-func createBodyWithParameters(parameters: [String: String]?, filePathKey: String?, imageDataKey: NSData, boundary: String, imgKey: String) -> NSData {
+func createBodyWithParameters(parameters: [String: String]?, filePathKey: String?, imageDataKey: NSData, boundary: String, imgKey: String, shouldNotify: Bool = false) -> NSData {
         let body = NSMutableData();
 
         if parameters != nil {
